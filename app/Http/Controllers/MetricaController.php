@@ -14,7 +14,7 @@ class MetricaController extends Controller
 {
     public function metrica()
     {
-        $fromDefault = Carbon::now()->subDay(6)->format('Y-m-d');
+        $fromDefault = Carbon::now()->subDay(60)->format('Y-m-d');
         $toDefault = Carbon::now()->format('Y-m-d');
         $sourseTypeDefault = 'all';
 
@@ -27,29 +27,39 @@ class MetricaController extends Controller
 //        $visits = YandexMetrika::getVisits(60)->data['data']['0']['metrics'][0];
 //        $denay = YandexMetrika::getDenay()->data['data']['0']['metrics'][0];
 //        $traffic = YandexMetrika::getTrafficSource(60)->data['data'];
-//dd(YandexMetrika::getVisitsViewsUsersFromSearch($from, $to)->data['data']);
 
 //        $visitsForGraf = [];
-
 
 //        $visitsViewsUsers = YandexMetrika::getVisitsViewsUsersForPeriod($from, $to)->data['data'];
 //        $visitsFromSearch = YandexMetrika::getVisitsViewsUsersFromSearch($from, $to)->data['data'];
 
 //dd($visitsFromSearch);
-        $st1 = YandexMetrika::getUsersFromSearch($from, $to)->data['data'];
-        $st = YandexMetrika::getUsersFromSearch($from, $to)->data['data'];
-//        if ($sourceType == 'search') {
-//            $st = YandexMetrika::getUsersFromSearch($from, $to)->data['data'];
-//        } else {
-//            $st = YandexMetrika::getVisitsViewsUsersForPeriod($from, $to)->data['data'];
-//        }
-//        dd($st);
-$stt = $st1[1]['metrics'][0];
-        $sts = $st[1]['metrics'][0];
+//        $st1 = YandexMetrika::getAllUsersWithTrafficSource($from, $to)->data['data'];
+//        $st = YandexMetrika::getAllUsersWithTrafficSource($from, $to)->data['data'];
+//        $st1 = YandexMetrika::getUsersWithTrafficSourceAD($from, $to)->data['data'][1]['metrics'][0];
+        $st = YandexMetrika::getAllUsersWithTrafficSource($from, $to)->data['data'];
+
+        if ($sourceType == 'search') {
+            $source = 1;
+            $denyID = 5;
+        } else if ($sourceType == 'AD') {
+            $source = 2;
+            $denyID = 6;
+        } else if ($sourceType == 'socialNetwork') {
+            $source = 3;
+            $denyID = 7;
+        } else {
+            $source = 0;
+            $denyID = 4;
+        }
 
         for ($i = 0; $i < count($st); $i++) {
-            $visitsForGraf[$st[$i]['dimensions'][0]['name']] = $st[$i]['metrics'][0];
+            $visitsForGraf[$st[$i]['dimensions'][0]['name']] = $st[$i]['metrics'][$source];
+            $deny[$i] = $st[$i]['metrics'][$denyID];
         }
+
+
+        $denyPercent = number_format(array_sum($deny) / array_sum($visitsForGraf) * 100, 2, '.', '');
 
         $start = Carbon::create($from);
         $stop = Carbon::create($to);
@@ -64,7 +74,8 @@ $stt = $st1[1]['metrics'][0];
         $graf->labels(array_keys($VisitsForGrafWithZero));
         $graf->dataset('First', 'line', array_values($VisitsForGrafWithZero));
 
-        return view('metrica', [ 'graf' => $graf, 'sourceType' => $sourceType,  'sts' => $sts, 'stt' => $stt]);
+        return view('metrica', compact('graf', 'sourceType', 'denyPercent'));
+//            ['graf' => $graf, 'sourceType' => $sourceType, 'denyPercent' => $denyPercent]);
 //        'visits' => $visits, 'denay' => $denay, 'users' => $users, 'searchEngine' => $searchEngine, 'traffic' => $traffic,
     }
 }

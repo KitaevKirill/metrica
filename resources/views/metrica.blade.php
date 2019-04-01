@@ -2,12 +2,15 @@
 
 @section('content')
     <div class="container">
-        {{$sourceType}},  {{$sts}}, {{$stt}}<br>
+        {{$sourceType}}<br>
+        Процент отказов: {{$denyPercent}}%<br>
 
         Источник визитов:
         {{--<form method="GET">--}}
         <button form="getForm" name="sourceType" value="all">Все источники</button><br>
         <button form="getForm" name="sourceType" value="search">Из поиска</button><br>
+        <button form="getForm" name="sourceType" value="AD">С рекалмы</button><br>
+        <button form="getForm" name="sourceType" value="socialNetwork">С соцсетей</button><br>
         {{--</form>--}}
 
         {{--Количество уникальных посетителей за 60 дней: {{$users}}<br>--}}
