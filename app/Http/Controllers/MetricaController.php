@@ -17,49 +17,57 @@ class MetricaController extends Controller
         $fromDefault = Carbon::now()->subDay(60)->format('Y-m-d');
         $toDefault = Carbon::now()->format('Y-m-d');
         $sourseTypeDefault = 'all';
+        $goalIDDefault = '42740183';
 
         $from = (empty($_GET['from'])) ? $fromDefault : $_GET['from'];
         $to = (empty($_GET['to'])) ? $toDefault : $_GET['to'];
+        if ($to < $from) {$from = $to;}
         $sourceType = (empty($_GET['sourceType'])) ? $sourseTypeDefault : $_GET['sourceType'];
+        $goalID = (empty($_GET['goal'])) ? $goalIDDefault : $_GET['goal'];
 
-//        $searchEngine = YandexMetrika::getVisitsUsersSearchEngine(60)->data['data'];
-//        $users = YandexMetrika::getVisits(60)->data['data']['0']['metrics'][1];
-//        $visits = YandexMetrika::getVisits(60)->data['data']['0']['metrics'][0];
-//        $denay = YandexMetrika::getDenay()->data['data']['0']['metrics'][0];
-//        $traffic = YandexMetrika::getTrafficSource(60)->data['data'];
-
-//        $visitsForGraf = [];
-
-//        $visitsViewsUsers = YandexMetrika::getVisitsViewsUsersForPeriod($from, $to)->data['data'];
-//        $visitsFromSearch = YandexMetrika::getVisitsViewsUsersFromSearch($from, $to)->data['data'];
-
-//dd($visitsFromSearch);
-//        $st1 = YandexMetrika::getAllUsersWithTrafficSource($from, $to)->data['data'];
-//        $st = YandexMetrika::getAllUsersWithTrafficSource($from, $to)->data['data'];
-//        $st1 = YandexMetrika::getUsersWithTrafficSourceAD($from, $to)->data['data'][1]['metrics'][0];
         $st = YandexMetrika::getAllUsersWithTrafficSource($from, $to)->data['data'];
+        $goals = YandexMetrika::getGoals($from, $to)->data['data'];
+        $goalsValue = YandexMetrika::getThisGoalsValue($from, $to, $goalID)->data['data'];
+
+//dd($goalsValue);
 
         if ($sourceType == 'search') {
             $source = 1;
             $denyID = 5;
+            $firstGoalID = 1;
         } else if ($sourceType == 'AD') {
             $source = 2;
             $denyID = 6;
+            $firstGoalID = 2;
         } else if ($sourceType == 'socialNetwork') {
             $source = 3;
             $denyID = 7;
+            $firstGoalID = 3;
         } else {
             $source = 0;
             $denyID = 4;
+            $firstGoalID = 0;
         }
+//        dd($goals);
 
         for ($i = 0; $i < count($st); $i++) {
             $visitsForGraf[$st[$i]['dimensions'][0]['name']] = $st[$i]['metrics'][$source];
             $deny[$i] = $st[$i]['metrics'][$denyID];
         }
 
+        if(!isset($visitsForGraf)){$visitsForGraf[] = 1;}
 
-        $denyPercent = number_format(array_sum($deny) / array_sum($visitsForGraf) * 100, 2, '.', '');
+
+        for ($j = 0; $j < count($goals); $j++) {
+            $goalsList[$goals[$j]['dimensions'][0]['name']] = $goals[$j]['dimensions'][0]['id'];
+        }
+
+//        dd($goals);
+        $goalsVisit = ($goalsValue == null) ? 0 : $goalsValue[0]['metrics'][$firstGoalID];
+
+            $denyPercent = (count($st) == 0)?0:number_format(array_sum($deny) / array_sum($visitsForGraf) * 100, 2, '.', '');
+            $firstGoalPercent = (count($st) == 0)?0:number_format($goalsVisit / array_sum($visitsForGraf) * 100, 2, '.', '');
+
 
         $start = Carbon::create($from);
         $stop = Carbon::create($to);
@@ -74,8 +82,10 @@ class MetricaController extends Controller
         $graf->labels(array_keys($VisitsForGrafWithZero));
         $graf->dataset('First', 'line', array_values($VisitsForGrafWithZero));
 
-        return view('metrica', compact('graf', 'sourceType', 'denyPercent'));
-//            ['graf' => $graf, 'sourceType' => $sourceType, 'denyPercent' => $denyPercent]);
-//        'visits' => $visits, 'denay' => $denay, 'users' => $users, 'searchEngine' => $searchEngine, 'traffic' => $traffic,
+        return view('metrica', compact('graf', 'sourceType', 'denyPercent', 'firstGoalPercent', 'goalsList', 'from', 'to'));
+    }
+
+    public function test(){
+        return view('test');
     }
 }

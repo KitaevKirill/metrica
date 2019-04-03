@@ -510,6 +510,43 @@ class YandexMetrika
         return $this;
     }
 
+    public function getThisGoalsValue($startDate,
+                             $endDate,
+                             $goalID)
+    {
+        $urlParams = [
+            'ids' => '50995868',                        //id счетчика
+            'date1' => $startDate,
+            'date2' => $endDate,
+            'metrics' => "ym:s:goal{$goalID}visits,
+            ym:s:goal{$goalID}visits[ym:s:trafficSource=='organic'],
+            ym:s:goal{$goalID}visits[ym:s:trafficSource=='ad'],
+            ym:s:goal{$goalID}visits[ym:s:trafficSource=='social']",
+            'dimensions' => 'ym:s:goal',
+        ];
+        $cacheName = md5(serialize($urlParams));
+
+        $this->data = $this->request($urlParams, $cacheName);
+
+        return $this;
+    }
+
+    public function getGoals($startDate,
+                             $endDate){
+        $urlParams = [
+            'ids' => '50995868',                        //id счетчика
+            'date1'      => $startDate,
+            'date2'      => $endDate,
+            'metrics' => "ym:s:visits",
+            'dimensions' => 'ym:s:goal',
+        ];
+        $cacheName = md5(serialize($urlParams));
+
+        $this->data = $this->request($urlParams, $cacheName);
+
+        return $this;
+    }
+
     public function getVisits($days = 60)
     {
         $urlParams = [

@@ -1,51 +1,52 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+    <div id="mtr" class="container">
         {{$sourceType}}<br>
+        id: {{ config('yandex-metrika.counter_id') }}<br>
         Процент отказов: {{$denyPercent}}%<br>
+        Процент конверсии по выбранной цели: {{$firstGoalPercent}}%<br>
 
-        Источник визитов:
-        {{--<form method="GET">--}}
-        <button form="getForm" name="sourceType" value="all">Все источники</button><br>
-        <button form="getForm" name="sourceType" value="search">Из поиска</button><br>
-        <button form="getForm" name="sourceType" value="AD">С рекалмы</button><br>
-        <button form="getForm" name="sourceType" value="socialNetwork">С соцсетей</button><br>
-        {{--</form>--}}
+        Источник визитов:<br>
+        <select name="sourceType" form="getForm" onchange='this.form.submit()'>
+            <option <?php if (isset($_GET['sourceType']) && ($_GET['sourceType'] == 'all')) echo 'selected' ?> value="all">Все источники</option>
+            <option <?php if (isset($_GET['sourceType']) && ($_GET['sourceType'] == 'search')) echo 'selected' ?> value="search">Из поиска</option>
+            <option <?php if (isset($_GET['sourceType']) && ($_GET['sourceType'] == 'AD')) echo 'selected' ?> value="AD">С рекламы</option>
+            <option <?php if (isset($_GET['sourceType']) && ($_GET['sourceType'] == 'socialNetwork')) echo 'selected' ?> value="socialNetwork">С соцсетей</option>
+        </select><br>
 
-        {{--Количество уникальных посетителей за 60 дней: {{$users}}<br>--}}
-        {{--Количество визитов за 60 дней: {{$visits}}<br>--}}
-        {{--Количество отказов за 60 дней: {{$denay}}<br>--}}
+        Цель:<br>
+        <select name="goal" form="getForm" onchange='this.form.submit()'>
+           @isset($goalsList) @foreach($goalsList as $name => $id)
+                <option <?php if (isset($_GET['goal']) && ($_GET['goal'] == $id)) echo 'selected' ?> value={{$id}}>{{$name}}</option>
+                @endforeach
+               @endisset
+        </select><br>
 
-        {{--Процент отказов: {{number_format($denay/$visits*100, 2, '.', '')}}%<br>--}}
-        {{--<hr>--}}
+        @if (count($errors) > 0)
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-        {{--@foreach($searchEngine as $search)--}}
-        {{--{{$search[0]['dimensions']['0']['name']}}--}}
-        {{--{{$search['dimensions']['0']['name']}} - {{$search['metric']['0']}}человек<br>--}}
-        {{--@endforeach--}}
-        {{--<div>--}}
-            {{--@for($i = 0; $i<8; $i++)--}}
-                {{--{{$searchEngine[$i]['dimensions']['0']['name']}} - {{$searchEngine[$i]['metrics']['0']}} человек<br>--}}
-            {{--@endfor--}}
-        {{--</div>--}}
-        {{--<hr>--}}
-
-        {{--@for($i = 0; $i<8; $i++)--}}
-            {{--{{$traffic[$i]['dimensions']['0']['name']}} - {{$searchEngine[$i]['metrics']['0']}} человек<br>--}}
-        {{--@endfor--}}
-
-        {{--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js" charset="utf-8"></script>--}}
         <div style="width: 100%; height: 350px">{!! $graf->container() !!}</div>
 
         {!! $graf->script() !!}
 
         Задать диапазон дат:
         <form id="getForm" method="GET">
-            <input type="date" name="from" value=<?php if (isset($_GET['from'])) echo $_GET['from'] ?>
-                    min="2012-05-29">
-            <input type="date" name="to" value=<?php if (isset($_GET['to'])) echo $_GET['to'] ?>>
-            <input type="submit" value="Send">
+            <input id="from" type="date" name="from" @change="changeDate"  v-model="modelFrom" :max="modelTo" value=<?php if (isset($_GET['from'])) echo $from ?> >
+            <input id="to" type="date" name="to" @change="changeDate" v-model="modelTo"  value=<?php if (isset($_GET['to'])) echo $to ?> >
+            <input id="sub" type="submit" value="Send" :disabled="fromMoreThenTo" >
+            <p v-if="fromMoreThenTo" class="alert alert-danger">Дата "От" не может быть больше даты "До"</p>
         </form>
+        @{{ message }}<br>
     </div>
+
+
+
 @endsection

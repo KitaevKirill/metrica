@@ -16,6 +16,8 @@ Route::get('/', function () {
 });
 
 Route::get('metrica', 'MetricaController@metrica');
+Route::get('test', 'MetricaController@test');
+
 
 Auth::routes();
 
